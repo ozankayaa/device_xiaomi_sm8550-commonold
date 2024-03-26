@@ -5,9 +5,9 @@
 #
 
 # Inherit from the proprietary version
-include vendor/xiaomi/sm8450-common/BoardConfigVendor.mk
+include vendor/xiaomi/sm8550-common/BoardConfigVendor.mk
 
-COMMON_PATH := device/xiaomi/sm8450-common
+COMMON_PATH := device/xiaomi/sm8550-common
 
 BUILD_BROKEN_DUP_RULES := true
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
@@ -19,11 +19,13 @@ AB_OTA_UPDATER := true
 AB_OTA_PARTITIONS += \
     boot \
     dtbo \
+    init_boot \
     odm \
     product \
     recovery \
     system \
     system_ext \
+    system_dlkm \
     vbmeta \
     vbmeta_system \
     vendor \
@@ -32,18 +34,10 @@ AB_OTA_PARTITIONS += \
 
 # Architecture
 TARGET_ARCH := arm64
-TARGET_ARCH_VARIANT := armv8-a-branchprot
+TARGET_ARCH_VARIANT := armv9-a
 TARGET_CPU_ABI := arm64-v8a
-TARGET_CPU_ABI2 :=
 TARGET_CPU_VARIANT := generic
 TARGET_CPU_VARIANT_RUNTIME := kryo300
-
-TARGET_2ND_ARCH := arm
-TARGET_2ND_ARCH_VARIANT := armv8-2a
-TARGET_2ND_CPU_ABI := armeabi-v7a
-TARGET_2ND_CPU_ABI2 := armeabi
-TARGET_2ND_CPU_VARIANT := generic
-TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a75
 
 # Audio
 $(call soong_config_set, android_hardware_audio, run_64bit, true)
@@ -63,7 +57,7 @@ TARGET_USES_QCOM_MM_AUDIO := true
 $(call soong_config_set, ufsbsg, ufsframework, bsg)
 
 # Bootloader
-TARGET_BOOTLOADER_BOARD_NAME := taro
+TARGET_BOOTLOADER_BOARD_NAME := kalama
 TARGET_NO_BOOTLOADER := true
 
 # Camera
@@ -207,11 +201,14 @@ TARGET_SYSTEM_EXT_PROP += $(COMMON_PATH)/properties/system_ext.prop
 TARGET_VENDOR_PROP += $(COMMON_PATH)/properties/vendor.prop
 
 # Recovery
-TARGET_RECOVERY_FSTAB := $(COMMON_PATH)/rootdir/etc/recovery.fstab
-TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
-TARGET_USERIMAGES_USE_EXT4 := true
-TARGET_USERIMAGES_USE_F2FS := true
+TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
+TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/etc/fstab.qcom
+TARGET_NO_RECOVERY := false
+BOARD_HAS_LARGE_FILESYSTEM := true
+BOARD_USES_RECOVERY_AS_BOOT := false
 BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true
+BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := false
+PRODUCT_COPY_FILES += $(DEVICE_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom
 
 # RIL
 ENABLE_VENDOR_RIL_SERVICE := true
