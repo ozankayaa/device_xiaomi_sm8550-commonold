@@ -215,9 +215,7 @@ PRODUCT_COPY_FILES += \
 
 # Health
 PRODUCT_PACKAGES += \
-    android.hardware.health-service.qti \
-    android.hardware.health-service.sm8550 \
-    android.hardware.health-service.sm8550_recovery 
+    android.hardware.health-service.qti
 
 # HIDL
 PRODUCT_PACKAGES += \
