@@ -325,23 +325,9 @@ $(foreach sku_out, $(TARGET_COPY_OUT_NFC_SKU_PERMISSIONS), \
 
 # Overlays
 PRODUCT_PACKAGES += \
-    CarrierConfigResCommon_Sys \
-    FrameworksResCommon_Sys \
-    SettingsResCommon_Sys \
-    SystemUIResCommon_Sys \
-    TelecommResCommon_Sys \
-    TelephonyResCommon_Sys \
-    WifiResCommon_Sys
-
-PRODUCT_PACKAGES += \
-    DialerResXiaomi \
-    FrameworksResTarget_Vendor \
-    FrameworksResXiaomi \
-    SettingsProviderResXiaomi \
-    SettingsResXiaomi \
-    WifiResTarget \
-    WifiResTarget_cape \
-    WifiResTarget_spf
+    FrameworksResCommon \
+    SettingsResCommon \
+    TelephonyResCommon
 
 # Partitions
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
