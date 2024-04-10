@@ -378,8 +378,35 @@ PRODUCT_PACKAGES += \
     init.qcom.post_boot.sh \
     init.qcom.rc \
     init.qcom.sh \
+    init.crda.sh \
+    init.kernel.post_boot-kalama.sh \
+    init.kernel.post_boot.sh \
+    init.mdm.sh \
+    init.qcom.coex.sh \
     init.recovery.qcom.rc \
-    init.target.rc
+    init.target.rc \
+    init.batterysecret.rc \
+    init.mi_thermald.rc \
+    init.qcom.factory.rc \
+    init.qcom.usb.rc \
+    init.qti.kernel.debug-kalama.sh \
+    init.qti.kernel.debug.sh \
+    init.qti.kernel.early_debug-kalama.sh \
+    init.qti.kernel.early_debug.sh \
+    init.qti.kernel.sh \
+    init.qti.media.sh \
+    init.qti.kernel.rc \
+    init.qti.ufs.rc \
+    init.qti.qcv.sh \
+    init.qti.write.sh \
+    init.recovery.hardware.rc \
+    qca6234-service.sh \
+    system_dlkm_modprobe.sh \
+    vendor.qti.diag.sh \
+    vendor_modprobe.sh
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/rootdir/etc/fstab.qcom:$(TARGET_VENDOR_RAMDISK_OUT)/first_stage_ramdisk/fstab.qcom
 
 # Secure element
 PRODUCT_PACKAGES += \
@@ -451,8 +478,8 @@ PRODUCT_COPY_FILES += \
 
 # Ueventd
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/rootdir/etc/ueventd.qcom.rc:$(TARGET_COPY_OUT_VENDOR)/etc/ueventd.rc \
-    $(LOCAL_PATH)/rootdir/etc/ueventd-odm.rc:$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc
+    $(LOCAL_PATH)/init/ueventd.qcom.rc:$(TARGET_COPY_OUT_VENDOR)/etc/ueventd.rc \
+    $(LOCAL_PATH)/init/ueventd.odm.rc:$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc
 
 # Update engine
 PRODUCT_PACKAGES += \
