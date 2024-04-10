@@ -32,6 +32,9 @@ AB_OTA_PARTITIONS += \
     vendor_boot \
     vendor_dlkm
 
+# ANT+
+BOARD_ANT_WIRELESS_DEVICE := "qualcomm-hidl"
+
 # Architecture
 TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv9-a
@@ -50,6 +53,10 @@ AUDIO_FEATURE_ENABLED_INSTANCE_ID := true
 AUDIO_FEATURE_ENABLED_LSM_HIDL := true
 AUDIO_FEATURE_ENABLED_PAL_HIDL := true
 AUDIO_FEATURE_ENABLED_PROXY_DEVICE := true
+AUDIO_USE_STUB_HAL := true
+BOARD_SUPPORTS_OPENSOURCE_STHAL := true
+BOARD_SUPPORTS_SOUND_TRIGGER := true
+BOARD_USES_ALSA_AUDIO := true
 
 TARGET_USES_QCOM_MM_AUDIO := true
 
@@ -60,6 +67,9 @@ $(call soong_config_set, ufsbsg, ufsframework, bsg)
 TARGET_BOOTLOADER_BOARD_NAME := kalama
 TARGET_NO_BOOTLOADER := true
 TARGET_USES_UEFI := true
+
+# Bluetooth
+BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(COMMON_PATH)/bluetooth/include
 
 # Camera
 TARGET_CAMERA_OVERRIDE_FORMAT_FROM_RESERVED := true
@@ -82,6 +92,21 @@ $(call soong_config_set, qtilocation, feature_nhz, false)
 
 # Lineage Health
 TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS := false
+
+# Kernel
+BOARD_KERNEL_CMDLINE := video=vfb:640x400,bpp=32,memsize=3072000 disable_dma32=on swinfo.fingerprint=ishtar:13/V14.0.2.0.TMAMIXM:user mtdoops.fingerprint=ishtar:13/V14.0.2.0.TMAMIXM:user bootconfig 
+BOARD_KERNEL_PAGESIZE := 4096
+BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOTIMG_HEADER_VERSION)
+BOARD_KERNEL_IMAGE_NAME := Image
+BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+BOARD_KERNEL_SEPARATED_DTBO := true
+TARGET_KERNEL_CONFIG := vendor/ishtar_tuivm.config
+TARGET_KERNEL_SOURCE := kernel/xiaomi/sm8550
+BOARD_BOOTCONFIG := \
+    androidboot.hardware=qcom \
+    androidboot.memcg=1 \
+    androidboot.usbcontroller=a600000.dwc3 \
+    androidboot.selinux=permissive
 
 # Metadata
 BOARD_USES_METADATA_PARTITION := true
@@ -165,7 +190,7 @@ DEVICE_MANIFEST_KALAMA_FILES := \
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := \
     $(COMMON_PATH)/vintf/compatibility_matrix.device.xml \
     $(COMMON_PATH)/vintf/compatibility_matrix.xiaomi.xml \
-    vendor/aosp/config/device_framework_matrix.xml
+    vendor/lineage/config/device_framework_matrix.xml
 
 # Verified Boot
 BOARD_AVB_ENABLE := true
