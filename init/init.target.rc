@@ -1,4 +1,3 @@
-
 # Copyright (c) 2019-2021, The Linux Foundation. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -151,18 +150,8 @@ on post-fs-data
     restorecon /sys/module/migt/parameters/mi_viptask
     chmod 0666 /sys/module/migt/parameters/mi_freq_enable
     restorecon /sys/module/migt/parameters/mi_freq_enable
-    chmod 0666 /sys/module/migt/parameters/flw_enable
-    restorecon /sys/module/migt/parameters/flw_enable
-    chmod 0666 /sys/module/migt/parameters/flw_freq_enable
-    restorecon /sys/module/migt/parameters/flw_freq_enable
-    chmod 0666 /sys/module/migt/parameters/target_delta
-    restorecon /sys/module/migt/parameters/target_delta
-
-    chmod 0666 /sys/module/mist/parameters/dflt_bw_enable
-    restorecon /sys/module/mist/parameters/dflt_bw_enable
-    chmod 0666 /sys/module/mist/parameters/dflt_lat_enable
-    restorecon /sys/module/mist/parameters/dflt_lat_enable
-
+    chmod 0777 /sys/module/migt/parameters/abnormal_status
+    restorecon /sys/module/migt/parameters/abnormal_status
 
     chmod 0666 /dev/metis
     restorecon /dev/metis
@@ -222,11 +211,6 @@ on post-fs-data
     chmod 0666 /sys/module/metis/parameters/is_break_enable
     restorecon /sys/module/metis/parameters/is_break_enable
 
-    chmod 0666 /dev/metis_link
-    restorecon /dev/metis_link
-    chmod 0666 /sys/module/metis/parameters/mi_lock_blocked_pid
-    restorecon /sys/module/metis/parameters/mi_lock_blocked_pid
-
     chmod 0662 /dev/miev
     restorecon /dev/miev
 
@@ -283,25 +267,12 @@ on post-fs-data
     #QCC mode configuration
     setprop vendor.qti.qcc.oper.mode 3
 
-mkdir /data/vendor/misc 01771 system system
-    mkdir /data/vendor/misc/mi_fp 0770 system system
-    mkdir /persist/mi_fp 0770 system system
-    mkdir /mnt/vendor/persist/mi_fp 0770 system system
-    mkdir /data/vendor/fpdump 0770 system system
-    mkdir /data/vendor/goodix 0770 system system
-    mkdir /data/vendor/fingerprint 0770 system system
-    mkdir /mnt/vendor/persist/goodix 0770 system system
-
 on early-boot
     start vendor.sensors
-
-    chown system graphics /sys/bus/platform/devices/soc:xiaomi_fingerprint/fingerdown
-    chmod 0664 /sys/bus/platform/devices/soc:xiaomi_fingerprint/fingerdown
+    #Enable WLAN SSR recovery
+    write /sys/kernel/cnss/recovery 3
 
 on boot
-    chmod 0666 /dev/input/event2
-    chmod 0666 /dev/goodix_fp
-    chown system system /dev/goodix_fp
     chown system system /sys/class/thermal/thermal_message/sconfig
     chown system system /sys/class/thermal/thermal_message/balance_mode
     chown cameraserver cameraserver /sys/class/thermal/thermal_message/torch_real_level
@@ -347,10 +318,6 @@ on boot
     chown system system /sys/class/mi_display/disp-DSI-0/max_brightness_clone
     chmod 0664 /sys/class/mi_display/disp-DSI-0/max_brightness_clone
 
-    # Touch feature
-    chown system system /dev/xiaomi-touch
-    chmod 0660 /dev/xiaomi-touch
-
     # Display feature sysfs node for penel1
     chown system system /sys/class/mi_display/disp-DSI-1/brightness_clone
     chmod 0664 /sys/class/mi_display/disp-DSI-1/brightness_clone
@@ -379,8 +346,6 @@ on boot
     chmod 0664 /dev/cpuctl/misc/tasks
     chown system system /proc/kswapd_c
 
-    chmod 0666 /sys/csiphy_umd_paras/csiphy_umd_paras
-
 on property:vendor.display.lcd_density=560
    setprop dalvik.vm.heapgrowthlimit 256m
 
@@ -401,7 +366,6 @@ on charger
     write /sys/bus/platform/devices/1d84000.ufshc/clkscale_enable 1
     write /sys/bus/platform/devices/1d84000.ufshc/auto_hibern8 5000
     write /sys/bus/platform/devices/1d84000.ufshc/clkgate_enable 1
-    setprop persist.sys.offlinelog.poweroff_charger_log true
 
 #service vendor.lowi /vendor/bin/sscrpcd
 #   class core
@@ -428,10 +392,10 @@ service vendor.per_proxy /vendor/bin/pm-proxy
     group system
     disabled
 
-service vendor.mdm_helper /vendor/bin/mdm_helper
-    class core
-    group system wakelock
-    disabled
+#service vendor.mdm_helper /vendor/bin/mdm_helper
+#    class core
+#    group system wakelock
+#    disabled
 
 service vendor.mdm_launcher /vendor/bin/sh /vendor/bin/init.mdm.sh
     class core
@@ -443,6 +407,28 @@ on property:init.svc.vendor.per_mgr=running
 on property:sys.shutdown.requested=*
     write /sys/kernel/qcom_rproc/shutdown_in_progress 1
     stop vendor.per_proxy
+
+#on property:vold.decrypt=trigger_restart_framework
+#   start vendor.cnss_diag
+
+on property:persist.vendor.cnss_diag.enable=true
+    start vendor.cnss_diag
+
+on property:persist.vendor.cnss_diag.enable=false
+    stop vendor.cnss_diag
+
+service vendor.cnss_diag /system/vendor/bin/cnss_diag -q -f -t HELIUM
+   class main
+   user system
+   group system wifi inet sdcard_rw media_rw diag
+   disabled
+   oneshot
+
+service vendor.nv_mac /vendor/bin/nv_mac
+    class late_start
+    user system
+    group system inet net_admin wifi net_raw
+    oneshot
 
 on early-boot && property:persist.vendor.pcie.boot_option=*
     write /sys/bus/platform/devices/1c00000.qcom,pcie/debug/boot_option ${persist.vendor.pcie.boot_option}
@@ -466,14 +452,6 @@ service vendor.bt_wdsdaemon /system/vendor/bin/wdsdaemon -su
     group bluetooth diag system wakelock
     disabled
     oneshot
-
-#Enable WLAN SSR recovery
-on property:persist.vendor.ssr.restart_level=ALL_ENABLE
-    write /sys/kernel/cnss/recovery 3
-
-#Disable WLAN SSR recovery
-on property:persist.vendor.ssr.restart_level=ALL_DISABLE
-    write /sys/kernel/cnss/recovery 0
 
 #on property:sys.user.0.ce_available=true
 #    start vendor.tcpdump
@@ -499,12 +477,6 @@ on property:vendor.hardware.wlan.runsniffer=stop
 on property:vendor.hardware.wlan.runsniffer=start
      start vendor.sniffer
 
- on property:vendor.hardware.wlan.runsniffer.circular=stop
-     stop vendor.sniffer.circular
-
- on property:vendor.hardware.wlan.runsniffer.circular=start
-     start vendor.sniffer.circular
-
 service vendor.tcpdump /vendor/bin/tcpdump -i any -W 3 -C 5 -s 134 -w /data/vendor/wlan_logs/tcpdump.pcap -Z system
     class main
     user root
@@ -513,13 +485,6 @@ service vendor.tcpdump /vendor/bin/tcpdump -i any -W 3 -C 5 -s 134 -w /data/vend
     oneshot
 
 service vendor.sniffer /vendor/bin/tcpdump -i wlan0 -w /data/vendor/wlan_logs/sniffer.pcap -Z system
-    class main
-    user root
-    group root wifi
-    disabled
-    oneshot
-
-service vendor.sniffer.circular /vendor/bin/tcpdump -i wlan0 -W 3 -C 300 -w /data/vendor/wlan_logs/sniffer.pcap -Z system
     class main
     user root
     group root wifi
@@ -557,47 +522,3 @@ on property:ro.boot.ramdump=enable
 #for cts-on-gsi test
 on boot && property:ro.product.system.manufacturer=Android
     setprop debug.sf.set_idle_timer_ms 0
-
-on property:vendor.post_boot.parsed=1
-    # Set default thermal profile
-    write /sys/class/thermal/thermal_message/sconfig 0
-
-    # IRQ Tuning
-    # IRQ 253: msm_drm0
-    # IRQ 208: kgsl_3d0_irq
-    write /proc/irq/208/smp_affinity_list 1
-    write /proc/irq/253/smp_affinity_list 2
-
-on property:vendor.minetd.low_budget=0
-    write /proc/sys/net/core/netdev_budget_usecs "8000"
-    write /proc/sys/net/core/dev_weight "64"
-
-on property:vendor.minetd.low_budget=1
-    write /proc/sys/net/core/netdev_budget_usecs "1000"
-    write /proc/sys/net/core/dev_weight "1"
-
-service fan_control_turn_on /vendor/bin/fan_service 1
-    class late_start
-    user root
-    disabled
-    oneshot
-
-service fan_control_turn_off /vendor/bin/fan_service 0
-    class late_start
-    user root
-    disabled
-    oneshot
-
-service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
-    override
-    class hal
-    user audioserver
-    # media gid needed for /dev/fm (radio) and for /data/misc/media (tee)
-    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct oem_2901 wakelock oem_2912 system
-    capabilities BLOCK_SUSPEND SYS_NICE
-    # setting RLIMIT_RTPRIO allows binder RT priority inheritance
-    rlimit rtprio 10 10
-    ioprio rt 4
-    task_profiles ProcessCapacityHigh HighPerformance
-    onrestart restart audioserver
-
