@@ -20,9 +20,6 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch_with_ven
 # Setup dalvik vm configs
 $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 
-# Inherit from the proprietary version
-$(call inherit-product, vendor/xiaomi/sm8550-common/sm8550-common-vendor.mk)
-
 # A/B
 AB_OTA_POSTINSTALL_CONFIG += \
     RUN_POSTINSTALL_system=true \
@@ -206,7 +203,8 @@ PRODUCT_COPY_FILES += \
 
 # Health
 PRODUCT_PACKAGES += \
-    android.hardware.health-service.qti
+    android.hardware.health-service.qti \
+    android.hardware.health-service.qti_recovery
 
 # HIDL
 PRODUCT_PACKAGES += \
@@ -517,3 +515,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     libnl \
     libwfdaac_vendor
+
+# Inherit from the proprietary version
+$(call inherit-product, vendor/xiaomi/sm8550-common/sm8550-common-vendor.mk)
