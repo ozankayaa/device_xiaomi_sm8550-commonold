@@ -8,6 +8,7 @@
 include vendor/xiaomi/sm8550-common/BoardConfigVendor.mk
 
 COMMON_PATH := device/xiaomi/sm8550-common
+KERNEL_PATH := device/xiaomi/ishtar-kernel
 
 BUILD_BROKEN_DUP_RULES := true
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
@@ -66,7 +67,6 @@ $(call soong_config_set, ufsbsg, ufsframework, bsg)
 # Bootloader
 TARGET_BOOTLOADER_BOARD_NAME := kalama
 TARGET_NO_BOOTLOADER := true
-TARGET_USES_UEFI := true
 
 # Bluetooth
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(COMMON_PATH)/bluetooth/include
@@ -100,8 +100,6 @@ BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOTIMG_HEADER_VERSION)
 BOARD_KERNEL_IMAGE_NAME := Image
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_KERNEL_SEPARATED_DTBO := true
-TARGET_KERNEL_CONFIG := vendor/ishtar_tuivm.config
-TARGET_KERNEL_SOURCE := kernel/xiaomi/sm8550
 BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
     androidboot.memcg=1 \
@@ -109,6 +107,37 @@ BOARD_BOOTCONFIG := \
     androidboot.selinux=permissive
 
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
+
+# Kill lineage kernel build task while preserving kernel
+TARGET_NO_KERNEL := true
+
+# Kernel - prebuilt
+TARGET_FORCE_PREBUILT_KERNEL := true
+ifeq ($(TARGET_FORCE_PREBUILT_KERNEL),true)
+TARGET_PREBUILT_KERNEL := device/xiaomi/ishtar-kernel/Image
+TARGET_PREBUILT_DTB := device/xiaomi/ishtar-kernel/dtb.img
+BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
+BOARD_PREBUILT_DTBOIMAGE := device/xiaomi/ishtar-kernel/dtbo.img
+PRODUCT_COPY_FILES += \
+    device/xiaomi/ishtar-kernel/dtb.img:$(TARGET_COPY_OUT)/dtb.img
+endif
+
+
+# Kernel modules
+BOARD_SYSTEM_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/system_dlkm/modules.load))
+
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/vendor_ramdisk/modules.load))
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(addprefix $(KERNEL_PATH)/vendor_ramdisk/, $(BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD))
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := $(KERNEL_PATH)/vendor_ramdisk/modules.blocklist
+
+BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/vendor_ramdisk/modules.load.recovery))
+RECOVERY_MODULES := $(addprefix $(KERNEL_PATH)/vendor_ramdisk/, $(BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD))
+
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(sort $(BOARD_VENDOR_RAMDISK_KERNEL_MODULES) $(RECOVERY_MODULES))
+
+BOARD_VENDOR_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/vendor_dlkm/modules.load))
+BOARD_VENDOR_KERNEL_MODULES := $(addprefix $(KERNEL_PATH)/vendor_dlkm/, $(BOARD_VENDOR_KERNEL_MODULES_LOAD))
+BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE :=  $(KERNEL_PATH)/vendor_dlkm/modules.blocklist
 
 # Metadata
 BOARD_USES_METADATA_PARTITION := true
@@ -143,6 +172,7 @@ TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
 
 # Platform
 BOARD_USES_QCOM_HARDWARE := true
+QCOM_BOARD_PLATFORMS += kalama
 TARGET_BOARD_PLATFORM := kalama
 TARGET_BOARD_PLATFORM_GPU := qcom-adreno740
 
@@ -167,7 +197,6 @@ TARGET_RECOVERY_FSTAB := $(COMMON_PATH)/rootdir/etc/fstab.qcom
 TARGET_NO_RECOVERY := false
 BOARD_HAS_LARGE_FILESYSTEM := true
 BOARD_USES_RECOVERY_AS_BOOT := false
-BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true
 BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := false
 PRODUCT_COPY_FILES += $(COMMON_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom
 

@@ -77,6 +77,8 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.audio.pro.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.audio.pro.xml \
     frameworks/native/data/etc/android.software.midi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.midi.xml
 
+AUDIO_HAL_DIR := hardware/qcom-caf/sm8550/audio/primary-hal
+
 # Automotive
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@2.0-manager-lib
@@ -239,6 +241,14 @@ PRODUCT_COPY_FILES += \
 # JSON
 PRODUCT_PACKAGES += \
     libjson
+
+# Kernel Headers
+PRODUCT_VENDOR_KERNEL_HEADERS := device/xiaomi/ishtar-kernel/kernel-headers
+
+# Kernel
+LOCAL_KERNEL := device/xiaomi/ishtar-kernel/Image
+PRODUCT_COPY_FILES += \
+    $(LOCAL_KERNEL):kernel
 
 # Keylayout
 PRODUCT_COPY_FILES += \
