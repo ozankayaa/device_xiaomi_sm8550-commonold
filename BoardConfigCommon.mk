@@ -100,6 +100,7 @@ BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOTIMG_HEADER_VERSION)
 BOARD_KERNEL_IMAGE_NAME := Image
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_KERNEL_SEPARATED_DTBO := true
+TARGET_KERNEL_SOURCE := $(KERNEL_PATH)/kernel-headers
 BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
     androidboot.memcg=1 \
@@ -113,15 +114,12 @@ TARGET_NO_KERNEL := true
 
 # Kernel - prebuilt
 TARGET_FORCE_PREBUILT_KERNEL := true
-ifeq ($(TARGET_FORCE_PREBUILT_KERNEL),true)
 TARGET_PREBUILT_KERNEL := device/xiaomi/ishtar-kernel/Image
 TARGET_PREBUILT_DTB := device/xiaomi/ishtar-kernel/dtb.img
 BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
 BOARD_PREBUILT_DTBOIMAGE := device/xiaomi/ishtar-kernel/dtbo.img
 PRODUCT_COPY_FILES += \
     device/xiaomi/ishtar-kernel/dtb.img:$(TARGET_COPY_OUT)/dtb.img
-endif
-
 
 # Kernel modules
 BOARD_SYSTEM_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/system_dlkm/modules.load))
