@@ -8,30 +8,11 @@
 include vendor/xiaomi/sm8550-common/BoardConfigVendor.mk
 
 COMMON_PATH := device/xiaomi/sm8550-common
-KERNEL_PATH := device/xiaomi/ishtar-kernel
+KERNEL_PATH := device/xiaomi/sm8550-common/ishtar-kernel
 
 BUILD_BROKEN_DUP_RULES := true
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
-BUILD_BROKEN_INCORRECT_PARTITION_IMAGES := true
-
-# A/B
-AB_OTA_UPDATER := true
-
-AB_OTA_PARTITIONS += \
-    boot \
-    dtbo \
-    init_boot \
-    odm \
-    product \
-    recovery \
-    system \
-    system_ext \
-    system_dlkm \
-    vbmeta \
-    vbmeta_system \
-    vendor \
-    vendor_boot \
-    vendor_dlkm
+BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES := true
 
 # ANT+
 BOARD_ANT_WIRELESS_DEVICE := "qualcomm-hidl"
@@ -96,10 +77,9 @@ TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS := false
 # Kernel
 BOARD_KERNEL_CMDLINE := video=vfb:640x400,bpp=32,memsize=3072000 disable_dma32=on swinfo.fingerprint=ishtar:13/V14.0.2.0.TMAMIXM:user mtdoops.fingerprint=ishtar:13/V14.0.2.0.TMAMIXM:user bootconfig 
 BOARD_KERNEL_PAGESIZE := 4096
-BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOTIMG_HEADER_VERSION)
+BOARD_BOOT_HEADER_VERSION := 4
+BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_KERNEL_IMAGE_NAME := Image
-BOARD_INCLUDE_DTB_IN_BOOTIMG := true
-BOARD_KERNEL_SEPARATED_DTBO := true
 TARGET_KERNEL_SOURCE := $(KERNEL_PATH)/kernel-headers
 BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
@@ -108,18 +88,20 @@ BOARD_BOOTCONFIG := \
     androidboot.selinux=permissive
 
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
+TARGET_HAS_GENERIC_KERNEL_HEADERS := true
+BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+BOARD_RAMDISK_USE_LZ4 := true
 
-# Kill lineage kernel build task while preserving kernel
-TARGET_NO_KERNEL := true
+TARGET_KERNEL_SOURCE := kernel/xiaomi/sm8550
+TARGET_KERNEL_CONFIG := \
+    gki_defconfig \
+    vendor/kalama_GKI.config
 
-# Kernel - prebuilt
-TARGET_FORCE_PREBUILT_KERNEL := true
-TARGET_PREBUILT_KERNEL := device/xiaomi/ishtar-kernel/Image
-TARGET_PREBUILT_DTB := device/xiaomi/ishtar-kernel/dtb.img
+BOARD_PREBUILT_DTBOIMAGE := $(KERNEL_PATH)/dtbo.img
+TARGET_PREBUILT_DTB := $(KERNEL_PATH)/dtb.img
 BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
-BOARD_PREBUILT_DTBOIMAGE := device/xiaomi/ishtar-kernel/dtbo.img
 PRODUCT_COPY_FILES += \
-    device/xiaomi/ishtar-kernel/dtb.img:$(TARGET_COPY_OUT)/dtb.img
+    $(KERNEL_PATH)/dtb.img:$(TARGET_COPY_OUT)/dtb.img
 
 # Kernel modules
 BOARD_SYSTEM_KERNEL_MODULES_LOAD := $(strip $(shell cat $(KERNEL_PATH)/system_dlkm/modules.load))
@@ -139,34 +121,6 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE :=  $(KERNEL_PATH)/vendor_dlkm/module
 
 # Metadata
 BOARD_USES_METADATA_PARTITION := true
-
-# Partitions
-BOARD_FLASH_BLOCK_SIZE := 0x020000 # (BOARD_KERNEL_PAGESIZE * 64)
-BOARD_BOOTIMAGE_PARTITION_SIZE := 0x0C000000
-BOARD_DTBOIMG_PARTITION_SIZE := 0x01800000
-BOARD_RECOVERYIMAGE_PARTITION_SIZE := 0x06400000
-BOARD_SUPER_PARTITION_SIZE := 9126805504 # 0x220000000
-BOARD_USERDATAIMAGE_PARTITION_SIZE := 239033364480 # 0x37A77FB000
-BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 0x06000000
-
-BOARD_SUPER_PARTITION_GROUPS := qti_dynamic_partitions
-BOARD_QTI_DYNAMIC_PARTITIONS_PARTITION_LIST := odm product system system_ext vendor vendor_dlkm
-BOARD_QTI_DYNAMIC_PARTITIONS_SIZE := 9122611200 # 0x21FC00000 # BOARD_SUPER_PARTITION_SIZE - overhead (4MiB)
-
-BOARD_ODMIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := ext4
-
-TARGET_COPY_OUT_ODM := odm
-TARGET_COPY_OUT_PRODUCT := product
-TARGET_COPY_OUT_SYSTEM_EXT := system_ext
-TARGET_COPY_OUT_VENDOR := vendor
-TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
-
--include vendor/evolution/config/BoardConfigReservedSize.mk
 
 # Platform
 BOARD_USES_QCOM_HARDWARE := true
@@ -204,6 +158,9 @@ ENABLE_VENDOR_RIL_SERVICE := true
 # Security patch level
 VENDOR_SECURITY_PATCH := 2024-01-01
 
+# System As Root
+BOARD_BUILD_GKI_BOOT_IMAGE_WITHOUT_RAMDISK := false
+
 # Sepolicy
 include device/qcom/sepolicy_vndr/SEPolicy.mk
 
@@ -213,11 +170,9 @@ BOARD_VENDOR_SEPOLICY_DIRS += $(COMMON_PATH)/sepolicy/vendor
 
 # VINTF
 DEVICE_MANIFEST_SKUS := kalama
+DEVICE_MANIFEST_FILE := $(COMMON_PATH)/vintf/manifest_xiaomi.xml
 DEVICE_MATRIX_FILE := $(COMMON_PATH)/vintf/compatibility_matrix.xml
-DEVICE_MANIFEST_KALAMA_FILES := \
-    $(COMMON_PATH)/vintf/manifest_kalama.xml \
-    $(COMMON_PATH)/vintf/manifest_xiaomi.xml
-
+DEVICE_MANIFEST_KALAMA_FILES := $(COMMON_PATH)/vintf/manifest_kalama.xml
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := \
     $(COMMON_PATH)/vintf/compatibility_matrix.device.xml \
     $(COMMON_PATH)/vintf/compatibility_matrix.xiaomi.xml \
@@ -237,6 +192,9 @@ BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX_LOCATION := 2
 
 BOARD_MOVE_GSI_AVB_KEYS_TO_VENDOR_BOOT := true
+
+# VNDK
+BOARD_VNDK_VERSION := current
 
 # WiFi
 BOARD_WLAN_DEVICE := qcwcn
